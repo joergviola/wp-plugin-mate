@@ -30,7 +30,12 @@ class MetaBox {
 	}
 
 	public function render($post) {
-		return View::render('../lib/views/metabox.php', ['post' => $post, 'fields'=>$this->options['fields'], 'columns'=>$this->options['columns']]);
+		$tmpl = $this->options['raw'] ? '../lib/views/metabox-raw.php' : '../lib/views/metabox.php';
+		return View::render($tmpl, [
+			'post' => $post,
+			'fields'=>$this->options['fields'],
+			'columns'=>$this->options['columns']
+		]);
 	}
 }
 
@@ -159,9 +164,9 @@ abstract class PostType {
 		});
 	}
 
-	protected function createHiddenField($name) {
-		return new Field($this, $name, null, 'hidden', function($post) use ($name) {
-			$value = get_post_meta($post->ID, $name, true);
+	protected function createHiddenField($name, $def='') {
+		return new Field($this, $name, null, 'hidden', function($post) use ($name, $def) {
+			$value = get_post_meta($post->ID, $name, true) ?: $def;
 			return '<input id="'.$name.'" name="'.$name.'" type="hidden" value="'.esc_attr($value).'"';
 		});
 	}
