@@ -3,6 +3,7 @@
 require('View.php');
 require('PostType.php');
 require('ShortCode.php');
+require 'puc/plugin-update-checker.php';
 
 abstract class Plugin {
 	function __construct($base) {
@@ -48,6 +49,14 @@ abstract class Plugin {
 				wp_enqueue_script( basename($script), plugins_url( $script, $this->base ), array(), '1.0.0', true );
 			}
 		}
+	}
+
+	public function update($location, $slug) {
+		$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
+			$location,
+			$this->base,
+			$slug
+		);
 	}
 
 }
