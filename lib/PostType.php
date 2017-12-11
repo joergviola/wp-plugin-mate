@@ -115,11 +115,12 @@ abstract class PostType {
 	protected function createHTMLField($renderer) {
 		return new Field($this, null, null, 'html', $renderer);
 	}
-	protected function createCheckboxField($name, $label) {
-		return new Field($this, $name, $label, 'checkbox',  function($post) use ($name) {
+	protected function createCheckboxField($name, $label, $def=false) {
+		return new Field($this, $name, $label, 'checkbox',  function($post) use ($name, $def) {
+			$value = get_post_meta($post->ID, $name, true) ?: $def;
 			return View::render('../lib/views/checkbox.php', [
 				'name' => $name,
-				'value' => get_post_meta($post->ID, $name, true)
+				'value' => $value
 			]);
 		});
 	}
