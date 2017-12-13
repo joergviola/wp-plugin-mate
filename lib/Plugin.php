@@ -8,6 +8,7 @@ require 'puc/plugin-update-checker.php';
 abstract class Plugin {
 	function __construct($base) {
 		$this->base = $base;
+		$this->view = new View($base);
 		add_action( 'init', [$this, 'init']);
 	}
 
@@ -57,6 +58,10 @@ abstract class Plugin {
 			$this->base,
 			$slug
 		);
+	}
+
+	public function render($viewname, $args) {
+		return $this->view->render($viewname, $args);
 	}
 
 }

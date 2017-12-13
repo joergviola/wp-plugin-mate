@@ -23,7 +23,8 @@ class Field {
 }
 
 class MetaBox {
-	function __construct($options) {
+	function __construct($post_type, $options) {
+		$this->post_type = $post_type;
 		$this->options = 		$args = array_merge([
 			'columns' => 1
 		],$options);
@@ -31,7 +32,7 @@ class MetaBox {
 
 	public function render($post) {
 		$tmpl = $this->options['raw'] ? '../lib/views/metabox-raw.php' : '../lib/views/metabox.php';
-		return View::render($tmpl, [
+		return $this->post_type->plugin->render($tmpl, [
 			'post' => $post,
 			'fields'=>$this->options['fields'],
 			'columns'=>$this->options['columns']
@@ -101,7 +102,7 @@ abstract class PostType {
 	}
 
 	protected function addMetaBox($options) {
-		$this->metaboxes[] = new MetaBox($options);
+		$this->metaboxes[] = new MetaBox($this, $options);
 	}
 
 	public function createMetaBoxes(WP_Post $post) {
@@ -122,8 +123,8 @@ abstract class PostType {
 	}
 	protected function createCheckboxField($name, $label, $def=false) {
 		return new Field($this, $name, $label, 'checkbox',  function($post) use ($name, $def) {
-			$value = get_post_meta($post->ID, $name, true) ?: $def;
-			return View::render('../lib/views/checkbox.php', [
+			$value = get_post_meta($post->ID, $name, true);
+			return $this->plugin->render('../lib/views/checkbox.php', [
 				'name' => $name,
 				'value' => $value
 			]);
@@ -134,7 +135,7 @@ abstract class PostType {
 	protected function createTextField($name, $label, $def) {
 		return new Field($this, $name, $label, 'text',  function($post) use ($name, $def) {
 			$value = get_post_meta($post->ID, $name, true) ?: $def;
-			return View::render('../lib/views/text.php', [
+			return $this->plugin->render('../lib/views/text.php', [
 				'name' => $name,
 				'value' => $value
 			]);
@@ -144,7 +145,7 @@ abstract class PostType {
 	protected function createSliderField($name, $label, $def, $min, $max, $step) {
 		return new Field($this, $name, $label, 'slider',  function($post) use ($name, $def, $min, $max, $step) {
 			$value = get_post_meta($post->ID, $name, true) ?: $def;
-			return View::render('../lib/views/slider.php', [
+			return $this->plugin->render('../lib/views/slider.php', [
 				'name' => $name,
 				'value' => $value,
 				'min' => $min,
@@ -156,7 +157,7 @@ abstract class PostType {
 
 	protected function createSelectField($name, $label, $options) {
 		return new Field($this, $name, $label, 'checkbox',  function($post) use ($name, $options) {
-			return View::render('../lib/views/select.php', [
+			return $this->plugin->render('../lib/views/select.php', [
 				'name' => $name,
 				'options' => $options,
 				'selected' => get_post_meta($post->ID, $name, true)
@@ -167,7 +168,7 @@ abstract class PostType {
 	protected function createHiddenField($name, $def='') {
 		return new Field($this, $name, null, 'hidden', function($post) use ($name, $def) {
 			$value = get_post_meta($post->ID, $name, true) ?: $def;
-			return '<input id="'.$name.'" name="'.$name.'" type="hidden" value="'.esc_attr($value).'"';
+			return '<input id="'.$name.'" name="'.$name.'" type="hidden" value="'.esc_attr($value).'">';
 		});
 	}
 	public function savePost($post_id){
@@ -183,6 +184,7 @@ abstract class PostType {
 			return;
 
 		foreach ($this->fields as $field) {
+			error_log($field->name . "=> |" .$_POST[$field->name]. "|");
 			update_post_meta($post_id, $field->name, trim($_POST[$field->name]));
 		}
 	}
